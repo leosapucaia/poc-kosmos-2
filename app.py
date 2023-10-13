@@ -179,10 +179,10 @@ def main():
         # This might give different results from the original argument `image_input`
         image_input = Image.open(user_image_path)
 
-        if text_input == "Breve":
-            text_input = "<grounding>Uma imagem de um(a):"
-        elif text_input == "Detalhado":
-            text_input = "<grounding>Descrição detalhada:"
+        if text_input == "Brief":
+            text_input = "<grounding>An image of"
+        elif text_input == "Detailed":
+            text_input = "<grounding>Describe this image in detail:"
         else:
             text_input = f"<grounding>{text_input}"
 
@@ -234,39 +234,53 @@ def main():
         return annotated_image, colored_text, str(filtered_entities)
 
     term_of_use = """
-        ### Termos de Uso
-        Ao usar este modelo, os usuários são obrigados a concordar com os seguintes termos:
-        O modelo é destinado para fins acadêmicos e de pesquisa.
-        A utilização do modelo para criar material inadequado é estritamente proibida e não é endossada por este trabalho.
-        A responsabilidade por qualquer aplicação imprópria ou inaceitável do modelo recai exclusivamente sobre os indivíduos que geraram tal conteúdo.
-
-        ### Licença
-        Este projeto está licenciado sob o [Código de Conduta de Código Aberto da Microsoft](https://opensource.microsoft.com/codeofconduct).
+    ### Terms of use  
+    By using this model, users are required to agree to the following terms:  
+    The model is intended for academic and research purposes. 
+    The utilization of the model to create unsuitable material is strictly forbidden and not endorsed by this work. 
+    The accountability for any improper or unacceptable application of the model rests exclusively with the individuals who generated such content. 
+    
+    ### License
+    This project is licensed under the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct).
     """
 
     with gr.Blocks(title="Kosmos-2", theme=gr.themes.Base()).queue() as demo:
         gr.Markdown(("""
-            # POC - Kosmos-2: Multimodal LLM para geração de descrições de imagens
+            # Kosmos-2: Grounding Multimodal Large Language Models to the World
+            [[Paper]](https://arxiv.org/abs/2306.14824) [[Code]](https://github.com/microsoft/unilm/blob/master/kosmos-2)
             """))
         with gr.Row():
             with gr.Column():
-                image_input = gr.Image(type="pil", label="Imagem de entrada")
-                text_input = gr.Radio(["Breve", "Detalhado"], label="Tipo de descrição", value="Breve")
+                image_input = gr.Image(type="pil", label="Test Image")
+                text_input = gr.Radio(["Brief", "Detailed"], label="Description Type", value="Brief")
 
-                run_button = gr.Button(label="Executar", visible=True)
+                run_button = gr.Button(label="Run", visible=True)
 
             with gr.Column():
                 image_output = gr.Image(type="pil")
                 text_output1 = gr.HighlightedText(
-                                    label="Descrição gerada",
+                                    label="Generated Description",
                                     combine_adjacent=False,
                                     show_legend=True,
                                 ).style(color_map=color_map)
 
+        with gr.Row():
+            with gr.Column():
+                gr.Examples(examples=[
+                            ["images/two_dogs.jpg", "Detailed"],
+                            ["images/snowman.png", "Brief"],
+                            ["images/man_ball.png", "Detailed"],
+                        ], inputs=[image_input, text_input])
+            with gr.Column():
+                gr.Examples(examples=[
+                            ["images/six_planes.png", "Brief"],
+                            ["images/quadrocopter.jpg", "Brief"],
+                            ["images/carnaby_street.jpg", "Brief"],
+                        ], inputs=[image_input, text_input])
         gr.Markdown(term_of_use)
 
         # record which text span (label) is selected
-        selected = gr.Number(-1, show_label=False, placeholder="Selecionado", visible=False)
+        selected = gr.Number(-1, show_label=False, placeholder="Selected", visible=False)
 
         # record the current `entities`
         entity_output = gr.Textbox(visible=False)
